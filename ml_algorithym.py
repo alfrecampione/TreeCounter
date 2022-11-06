@@ -2,6 +2,7 @@ from create_trains_test import *
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
 import numpy as np
 
 database = strat_train_set.drop("tree_count", axis=1, inplace=False)
@@ -38,8 +39,24 @@ my_dict = {
     tree_rmse_scores.max(): "tree",
     forest_rmse_score.max(): "forest",
 }
-print(
-    my_dict[
-        max(lin_rmse_scores.max(), max(tree_rmse_scores.max(), forest_rmse_score.max()))
-    ]
+best_result = min(
+    lin_rmse_scores.max(), min(tree_rmse_scores.max(), forest_rmse_score.max())
 )
+
+print(my_dict[best_result])
+
+# model selection
+best_model = {
+    lin_rmse_scores.max(): lin_reg,
+    tree_rmse_scores.max(): tree_reg,
+    forest_rmse_score.max(): forest_reg,
+}
+final_model = best_model[best_result]
+
+# Evaluate in test set
+X_test = strat_test_set.drop("tree_count", axis=1)
+Y_test = strat_test_set["tree_count"]
+final_predictions = final_model.predict(X_test)
+final_mse = mean_squared_error(Y_test, final_predictions)
+final_rmse = np.sqrt(final_mse)
+print(final_mse)
